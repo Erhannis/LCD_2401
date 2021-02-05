@@ -1,7 +1,0 @@
-Controller code for the WD-C2401P-1GNN, and probably similar models.  Bought a small pile of them for $0.50 each from https://www.allelectronics.com/item/lcd-111/24-x-1-lcd-incredible-price/1.html
-
-Code is a slightly modified version of dirty_valentine's post at https://forum.arduino.cc/index.php?topic=78002.msg705823#msg705823
-
-Notes, to the best of my knowledge:
-Pins are 5v.
-
