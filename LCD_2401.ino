@@ -14,8 +14,8 @@
  * LCD VCC to 5V
  * LCD RESET pin to digital pin 13
  * LCD RS pin to digital pin 12
- * LCD Enable pin to digital pin 11
- * LCD R/W pin to digital pin 10
+ * LCD R/W pin to digital pin 11
+ * LCD ENABLE pin to digital pin 10
  * LCD D0 pin to digital pin 9
  * LCD D1 pin to digital pin 8
  * LCD D2 pin to digital pin 7
@@ -39,8 +39,10 @@
 class WDC2401P
 {
 private:
+  byte _reset_pin;   // define RESET Arduino pin #
   byte _rs_pin;      // define RS Arduino pin #
-  byte _enable_pin;  // define enable Arduino pin #
+  byte _rw_pin;      // define RW Arduino pin #
+  byte _enable_pin;  // define ENABLE Arduino pin #
   byte _data_pin0;   // define D0 Arduino pin #
   byte _data_pin1;   // define D1 Arduino pin # 
   byte _data_pin2;   // define D2 Arduino pin #
@@ -85,13 +87,16 @@ private:
   }
 
 public:  
-  WDC2401P(byte _rs=12, byte _en=10,
+  WDC2401P(byte _reset=13, byte _rs=12, //NOTE: These defaults are not the important bit (and I don't actually know how to use them) - the important bit is below, the call to WDC2401P LCD(...) 
+           byte _rw=11, byte _en=10,
            byte _d0=9, byte _d1=8,
            byte _d2=7,  byte _d3=6,
            byte _d4=5,  byte _d5=4,
            byte _d6=3,  byte _d7=2) :
+    _reset_pin(_reset),// define RESET Arduino pin #
     _rs_pin(_rs),      // define RS Arduino pin #
-    _enable_pin(_en),  // define enable Arduino pin #
+    _rw_pin(_rw),      // define RW Arduino pin #
+    _enable_pin(_en),  // define ENABLE Arduino pin #
     _data_pin0(_d0),   // define D0 Arduino pin #
     _data_pin1(_d1),   // define D1 Arduino pin # 
     _data_pin2(_d2),   // define D2 Arduino pin #
@@ -104,7 +109,19 @@ public:
   }
   
   void Initialize()
-  {    
+  {
+    // Pull R/W low
+    pinMode(_rw_pin, OUTPUT);
+    digitalWrite(_rw_pin, LOW);
+
+    // Reset LCD controller
+    pinMode(_reset_pin, OUTPUT);
+    digitalWrite(_reset_pin, LOW);
+    delay(10);
+    digitalWrite(_reset_pin, HIGH);
+    delay(10);
+
+
     pinMode(_rs_pin, OUTPUT);
     pinMode(_enable_pin, OUTPUT);
     pinMode(_data_pin0, OUTPUT);
@@ -235,29 +252,10 @@ public:
 // END OF WDC2401P CLASS //////////////////////////////////////////////
 
 // Setup the LCD Class and interface pins as defined below
-//WDC2401P LCD(RS, EN, D0, D1, D2, D3, D4, D5, D6, D7)
-WDC2401P LCD(12, 10, 9,8, 7, 6, 5, 4, 3, 2);
-//WDC2401P LCD(31, 33, 34, 35, 36, 37, 38, 39, 40, 41);
+//WDC2401P LCD(RESET, RS, RW, EN, D0, D1, D2, D3, D4, D5, D6, D7)
+WDC2401P LCD(13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2);
 
-#define RESET 13
-#define RW 11
 void setup() {
-//  Serial.begin(115200);
-//  while (!Serial) {
-//    ; // wait for serial port to connect. Needed for Native USB only
-//  }
-//  Serial.println("Goodnight moon!");
-
-  pinMode( RW, OUTPUT );
-  digitalWrite( RW, LOW );
-
-  pinMode( RESET, OUTPUT );
-  digitalWrite( RESET, LOW );
-  delayMicroseconds(1000*10);
-  digitalWrite( RESET, HIGH );
-  delayMicroseconds(1000*10);
-
-  
   // Initialize the LCD (this must be done!)
   LCD.Initialize(); 
   // Clear the LCD Display
