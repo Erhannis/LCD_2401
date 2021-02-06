@@ -9,6 +9,6 @@ Pins are 5v.  (ESP8266 and Raspberry Pi emit 3.3v ; ATMEGA2560 (maybe arduinos i
 RESET needs to be pulled low for a few ms, then pulled high and left there.  (The code does this in Initialize().)  (At least, I think it's important.  Getting conflicting evidence.)
 R/W needs to be pulled low.  (Presumably if you wanted to read you'd pull it high?)  (The code does this in Initialize().)
 
-The original author didn't mention a license, so I'm going to make an assumption and release this under Apache 2.0.
+The original author didn't mention a license, so I'm going to make an assumption and release this under Apache 2.0 - except for the PDF, that probably belongs to a company.
 
 -Erhannis
