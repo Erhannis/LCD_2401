@@ -52,6 +52,7 @@ private:
   byte _data_pin6;   // define D6 Arduino pin #
   byte _data_pin7;   // define D7 Arduino pin #   
 
+public:  
   WDC2401P& WriteCommand(byte Command = 0x01)  // The following code writes a command to the LCD
   { 
     digitalWrite(_rs_pin, LOW);                // set LCD RS pin low for sending commands 
@@ -86,7 +87,6 @@ private:
     delay(1);
   }
 
-public:  
   WDC2401P(byte _reset=13, byte _rs=12, //NOTE: These defaults are not the important bit (and I don't actually know how to use them) - the important bit is below, the call to WDC2401P LCD(...) 
            byte _rw=11, byte _en=10,
            byte _d0=9, byte _d1=8,
@@ -186,14 +186,16 @@ public:
   
   void CursorPos(byte location)
   {
-    // Not sure what happened here, but at 16 and above the address steps backwards
+    // Not sure what happened here, but at 16 and above the address steps backwards    
+    // The docs say the break oughtta happen at >= 12.  Strange.
     if (location > 15)
     {
       location=location+4;             // This seems messed up but it works
-    } 
-    if (location > 23 || location < 0) // check for location outside display range
+    }
+    //NOTE: For some reason, setting location 27 messes up subsequent things.  I.e., currently you can't jump straight to the final char.
+    if (location > 25 || location < 0) // check for location outside display range
     {
-      location = 24;                   // set location of first char outside display range
+      location = 26;                   // set location of first char outside display range
     }
     location = location + 0xE0;        // add LCD cursor location address (0xE0) to location
     WriteCommand(location);            // Send command to move cursor to selected location
@@ -248,6 +250,39 @@ public:
       }
     }
   }
+
+  /**
+   * Set the `idx`'th user-definable symbol
+   * 0 <= idx <= 15  // But it looks like there's actually only 4 chars, sadly
+   * //bits[Y][X] = [8][5]
+   * bits[Y] = [8]*0bABCDE // 8 rows of 5 bits
+   * 
+   * Note that the cursor position will be reset to 0 after this call.
+   */
+  //void WriteFont(int idx, bool[8][5] bits) {
+  //void WriteFont(int idx, int bits[]) {
+  void WriteFont(int idx,
+    int row0,
+    int row1,
+    int row2,
+    int row3,
+    int row4,
+    int row5,
+    int row6,
+    int row7
+  ) {
+    WriteCommand(0b10100000+idx*8);
+    WriteData(row0);
+    WriteData(row1);
+    WriteData(row2);
+    WriteData(row3);
+    WriteData(row4);
+    WriteData(row5);
+    WriteData(row6);
+    WriteData(row7);
+    WriteCommand(0b11000000);
+    WriteCommand(0b11100000);
+  }
 };
 // END OF WDC2401P CLASS //////////////////////////////////////////////
 
@@ -255,21 +290,87 @@ public:
 //WDC2401P LCD(RESET, RS, RW, EN, D0, D1, D2, D3, D4, D5, D6, D7)
 WDC2401P LCD(13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2);
 
+void testFont() {
+  LCD.WriteFont(0,
+    0b11111,
+    0b10101,
+    0b10101,
+    0b11111,
+    0b10001,
+    0b11111,
+    0b10001,
+    0b11111);
+  LCD.WriteFont(1,
+    0b01110,
+    0b10001,
+    0b11011,
+    0b10001,
+    0b11011,
+    0b10101,
+    0b10001,
+    0b01110);
+  LCD.WriteFont(2,
+    0b00010,
+    0b10010,
+    0b10010,
+    0b11110,
+    0b11111,
+    0b11111,
+    0b11111,
+    0b01110);
+  LCD.WriteFont(3,
+    0b11111,
+    0b10001,
+    0b10001,
+    0b10001,
+    0b10001,
+    0b10001,
+    0b10001,
+    0b11111);
+}
+
+char straight[] = {1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,0};
 void setup() {
+  Serial.begin(115200);
+
   // Initialize the LCD (this must be done!)
   LCD.Initialize(); 
   // Clear the LCD Display
   LCD.Clear();
+
   // use PrintChar() command to print to LCD screen
-  LCD.PrintChar("goodnight, moon!");
+  //LCD.PrintChar("goodnight, moon!");
+  LCD.PrintChar(straight);
+  //delay(2000);
+
+  //(int[]){1,2,3}
+  testFont();
 }
 
+int counter = 0;
+
+char c[] = {'z'};
+char d[] = {0b01111111,0b10000000,0b01111111,0b10000000};
 void loop() 
   {
     // Set the cursor position (note: first char is 0 not 1)
-    LCD.CursorPos(17);
+    //LCD.CursorPos(17);
     // print the number of seconds since reset:
-    LCD.PrintNum(millis()/1000);
-    //Serial.println(millis()/1000);
-    delay(200);
+    //LCD.PrintNum(millis()/1000);
+    
+    int pos = counter % 24;
+    LCD.CursorPos(pos);
+    
+    //LCD.WriteCommand(0b01100000 + (counter % 0b1000)); // Janky scroll
+    
+//    if (pos >= 12) {
+//      pos = pos + 4;
+//    }
+    //LCD.WriteCommand(pos+0xE0);
+    LCD.PrintChar(c);
+    Serial.println(pos);
+    Serial.println((int)(c[0]&0xFF));
+    delay(500);
+    c[0]++;
+    counter++;
   }
