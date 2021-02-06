@@ -360,7 +360,7 @@ void setup() {
 
 int counter = 0;
 
-char c[] = {'z'};
+char c[] = {'z',0x00};
 char d[] = {0b01111111,0b10000000,0b01111111,0b10000000};
 void loop() 
   {
