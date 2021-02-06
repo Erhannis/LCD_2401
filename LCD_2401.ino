@@ -205,7 +205,7 @@ public:
   {
     char c_Temp;                                                       // Temp holder for character to display
     // The following code prints the characters to LCD
-    for (int i = 0; i < 23; i++) {
+    for (int i = 0; i < 23; i++) { //TODO Note, this could run off the end if we didn't start at 0
       c_Temp = *(c_Text+i);
       if (c_Temp == '\0') {
         i=24;
@@ -252,15 +252,27 @@ public:
   }
 
   /**
-   * Set the `idx`'th user-definable symbol
-   * 0 <= idx <= 15  // But it looks like there's actually only 4 chars, sadly
-   * //bits[Y][X] = [8][5]
-   * bits[Y] = [8]*0bABCDE // 8 rows of 5 bits
-   * 
+   * Set the `idx`'th user-definable symbol.
    * Note that the cursor position will be reset to 0 after this call.
+   * 
+   * 0 <= idx <= 15  // But it looks like there's actually only 4 chars, sadly
+   * row0-row7 each 5 bits.  Like:
+   * 
+   *   LCD.WriteFont(1,
+   *     0b01110,
+   *     0b10001,
+   *     0b11011,
+   *     0b10001,
+   *     0b11011,
+   *     0b10101,
+   *     0b10001,
+   *     0b01110);
+   * 
+   * chars 0-3, 4-7, 8-11, and 12-15 all map to the same 4 symbols.  So like, you can use them like:
+   * 
+   * char text[] = {4,5,6,7,0}; // 0 is end-of-string, for PrintChar
+   * LCD.PrintChar(text);
    */
-  //void WriteFont(int idx, bool[8][5] bits) {
-  //void WriteFont(int idx, int bits[]) {
   void WriteFont(int idx,
     int row0,
     int row1,
@@ -290,7 +302,7 @@ public:
 //WDC2401P LCD(RESET, RS, RW, EN, D0, D1, D2, D3, D4, D5, D6, D7)
 WDC2401P LCD(13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2);
 
-void testFont() {
+void demoFont() {
   LCD.WriteFont(0,
     0b11111,
     0b10101,
@@ -329,7 +341,7 @@ void testFont() {
     0b11111);
 }
 
-char straight[] = {1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,0};
+char straight[] = {1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,0}; // Demo data for font test
 void setup() {
   Serial.begin(115200);
 
@@ -343,8 +355,7 @@ void setup() {
   LCD.PrintChar(straight);
   //delay(2000);
 
-  //(int[]){1,2,3}
-  testFont();
+  demoFont();
 }
 
 int counter = 0;
@@ -360,13 +371,6 @@ void loop()
     
     int pos = counter % 24;
     LCD.CursorPos(pos);
-    
-    //LCD.WriteCommand(0b01100000 + (counter % 0b1000)); // Janky scroll
-    
-//    if (pos >= 12) {
-//      pos = pos + 4;
-//    }
-    //LCD.WriteCommand(pos+0xE0);
     LCD.PrintChar(c);
     Serial.println(pos);
     Serial.println((int)(c[0]&0xFF));
